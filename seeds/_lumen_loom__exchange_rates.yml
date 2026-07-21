@@ -1,0 +1,10 @@
+version: 2
+
+seeds:
+  - name: lumen_loom__exchange_rates
+    config:
+        database: LUMEN_LOOM
+        schema: seed
+    columns:
+        - name: currency
+        - name: usd_rate

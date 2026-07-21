@@ -1,0 +1,69 @@
+version: 2
+
+models:
+  - name: int_lumen_loom__orders
+    description: "Standardized order data with amounts converted to USD and timestamps corrected."
+    columns:
+      - name: order_id
+        description: "Primary key for the order."
+        tests:
+          - unique
+          - not_null
+
+  - name: int_lumen_loom__payments
+    description: "Standardized payments with USD conversion and duplication flags."
+    columns:
+      - name: payment_key
+        description: "Surrogate key to handle intentional duplicate gateway records."
+        tests:
+          - unique
+          - not_null
+      - name: payment_id
+        description: "The source payment identifier. Not unique due to retained gateway duplicates."
+        tests:
+          - not_null
+      - name: order_id
+        description: "Foreign key joining to orders."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('int_lumen_loom__orders')
+              field: order_id
+
+  - name: int_lumen_loom__refunds
+    description: "Standardized refunds with USD conversion."
+    columns:
+      - name: refund_id
+        description: "Primary key for the refund."
+        tests:
+          - unique
+          - not_null
+      - name: payment_id
+        description: "Foreign key joining to the original payment."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('int_lumen_loom__payments')
+              field: payment_id
+      - name: order_id
+        description: "Foreign key joining to orders."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('int_lumen_loom__orders')
+              field: order_id
+
+  - name: int_lumen_loom__shipping
+    description: "Standardized shipping data with derived API statuses."
+    columns:
+      - name: shipment_id
+        description: "Primary key for the shipment."
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: "Foreign key joining to orders."
+        tests:
+          - relationships:
+              to: ref('int_lumen_loom__orders')
+              field: order_id

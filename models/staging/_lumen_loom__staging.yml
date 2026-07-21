@@ -1,0 +1,131 @@
+version: 2
+
+models:
+  - name: stg_lumen_loom__orders
+    description: "One row per order. Represents the core lifecycle state of an order."
+    columns:
+      - name: order_key
+        description: "Surrogate key for the order (hashed order_id and customer_id)."
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: "The original unique order identifier from the source system."
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: "The identifier of the purchasing customer."
+      - name: order_status
+        description: "Current lifecycle state of the order."
+        tests:
+          - accepted_values:
+              values: ['placed', 'confirmed', 'completed', 'cancelled']
+      - name: order_amount
+        description: "Order total at placement, in the local currency."
+      - name: currency
+        description: "The currency the order was placed in (Mostly USD; some EUR/GBP)."
+      - name: created_at
+        description: "Timestamp when the order was placed."
+      - name: updated_at
+        description: "Timestamp of the last status change. Usually >= created_at."
+
+  - name: stg_lumen_loom__payments
+    description: " One row per payment attempt. Note: Contains retries and duplicate gateway logs."
+    columns:
+      - name: payment_key
+        description: "Surrogate key for the payment (hashed payment_id and order_id)."
+        tests:
+          - unique
+          - not_null
+      - name: payment_id
+        description: "Unique identifier for the payment attempt. Tested for not_null, but NOT unique due to known gateway double-logging."
+        tests:
+          - not_null
+      - name: order_id
+        description: "The order being paid for."
+      - name: payment_status
+        description: "Outcome of the payment attempt."
+        tests:
+          - accepted_values:
+              values: ['succeeded', 'failed']
+      - name: amount
+        description: "Attempted charge amount."
+      - name: currency
+        description: "Charge currency."
+      - name: payment_method
+        description: "The method used for the payment."
+        tests:
+          - accepted_values:
+              values: ['card', 'paypal', 'apple_pay', 'bank_transfer']
+      - name: gateway_fee
+        description: "Processor fee on succeeded charges; 0 on failures."
+      - name: attempted_at
+        description: "Timestamp when the payment attempt was made."
+      - name: processed_at
+        description: "Timestamp when the payment settled. Will be null for failed attempts."
+
+  - name: stg_lumen_loom__refunds
+    description: "One row per refund. Refunds can be partial and occur in a later month."
+    columns:
+      - name: refund_key
+        description: "Surrogate key for the refund (hashed refund_id, payment_id and order_id)."
+        tests:
+          - unique
+          - not_null
+      - name: refund_id
+        description: "Primary key for the refund."
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: "The order being refunded."
+      - name: payment_id
+        description: "The specific payment the refund applies to."
+      - name: refund_amount
+        description: "Amount refunded. Can be partial."
+      - name: currency
+        description: "Refund currency."
+      - name: refund_reason
+        description: "Categorized reason for the refund."
+        tests:
+          - accepted_values:
+              values: ['damaged', 'wrong_item', 'changed_mind', 'late_delivery', 'not_as_described']
+      - name: refund_status
+        description: "Current status of the refund."
+      - name: requested_at
+        description: "Timestamp when the refund was requested."
+      - name: processed_at
+        description: "Timestamp when the refund settled."
+
+  - name: stg_lumen_loom__shipping
+    description: "One row per shipment. Flaky carrier API may result in null timestamps."
+    columns:
+      - name: shippment_key
+        description: "Surrogate key for the refund (hashed shipment_id and order_id)."
+        tests:
+          - unique
+          - not_null
+      - name: shipment_id
+        description: "Primary key for the shipment."
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: "The order being shipped."
+      - name: carrier
+        description: "The fulfillment carrier handling the shipment."
+        tests:
+          - accepted_values:
+              values: ['fleet_a', 'fleet_b', 'regional_x', 'regional_y']
+      - name: shipping_cost
+        description: "Cost to ship the order."
+      - name: status
+        description: "Current status of the shipment."
+        tests:
+          - accepted_values:
+              values: ['delivered', 'in_transit']
+      - name: shipped_at
+        description: "Dispatch timestamp. May be null due to carrier API timeouts."
+      - name: delivered_at
+        description: "Delivery timestamp. May be null due to carrier API timeouts."
