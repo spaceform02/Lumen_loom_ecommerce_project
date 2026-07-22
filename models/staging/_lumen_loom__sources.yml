@@ -26,25 +26,86 @@ sources:
             tests:
               - unique
               - not_null
-            # Fellow: is this actually unique + not null? Add tests and find out.
+          - name: customer_id
+            description: "The purchasing customer."
+          - name: order_status
+            description: "Current lifecycle state: placed, confirmed, completed, cancelled."
+          - name: order_amount
+            description: "Order total at placement, in CURRENCY."
+          - name: currency
+            description: "Mostly USD; some EUR/GBP."
+          - name: created_at
+            description: "When the order was placed."
+          - name: updated_at
+            description: "Last status change. Usually >= CREATED_AT."
 
       - name: raw_payments
         description: "One row per payment ATTEMPT (includes failures and retries)."
         config:
-          loaded_at_field: attempted_atdbt
+          loaded_at_field: attempted_at
           freshness:
             warn_after: {count: 36, period: hour}
             error_after: {count: 48, period: hour}
         columns:
           - name: payment_id
             description: "Unique per attempt."
+          - name: order_id
+            description: "The order being paid for."
+          - name: payment_status
+            description: "succeeded or failed."
+          - name: amount
+            description: "Attempted charge."
+          - name: currency
+            description: "Charge currency."
+          - name: payment_method
+            description: "card, paypal, apple_pay, bank_transfer."
+          - name: gateway_fee
+            description: "Processor fee on succeeded charges; 0 on failures."
+          - name: attempted_at
+            description: "When the attempt was made."
+          - name: processed_at
+            description: "When it settled; null for failed attempts."
 
       - name: raw_refunds
         description: "One row per refund. Can be partial; often a later month than the order."
         config:
           loaded_at_field: processed_at
+        columns:
+          - name: refund_id
+            description: "Unique refund identifier."
+          - name: order_id
+            description: "Order being refunded."
+          - name: payment_id
+            description: "The payment the refund applies to."
+          - name: refund_amount
+            description: "Amount refunded; can be partial."
+          - name: currency
+            description: "Refund currency."
+          - name: refund_reason
+            description: "damaged, wrong_item, changed_mind, late_delivery, not_as_described."
+          - name: refund_status
+            description: "completed."
+          - name: requested_at
+            description: "When the refund was requested."
+          - name: processed_at
+            description: "When it settled. Often a later month than the order."
 
       - name: raw_shipping
         description: "One row per shipment. Timestamps go missing on carrier API timeouts."
         config:
-          loaded_at_field: shipped_at   # note: nullable — consider what freshness means here
+          loaded_at_field: shipped_at
+        columns:
+          - name: shipment_id
+            description: "Unique shipment identifier."
+          - name: order_id
+            description: "Order being shipped."
+          - name: carrier
+            description: "Fulfilment carrier."
+          - name: shipping_cost
+            description: "Cost to ship."
+          - name: status
+            description: "delivered or in_transit."
+          - name: shipped_at
+            description: "Dispatch time. Sometimes null (carrier API timeout)."
+          - name: delivered_at
+            description: "Delivery time. Sometimes null."

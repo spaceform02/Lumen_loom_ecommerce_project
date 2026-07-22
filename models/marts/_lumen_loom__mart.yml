@@ -1,0 +1,84 @@
+version: 2
+
+models:
+  - name: mart_lumen_loom__revenue
+    description: "Wide fact table at the order grain containing all financial, payment, refund, and shipping metrics to establish a single source of truth for revenue."
+    columns:
+      - name: order_key
+        description: "Surrogate key for the order."
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: "Unique natural identifier for the order."
+        tests:
+          - unique
+          - not_null
+      - name: payment_id
+        description: "Identifier for the successful payment attempt."
+        tests:
+          - unique
+      - name: refund_id
+        description: "Identifier for the refund associated with the order."
+        tests:
+          - unique
+      - name: shipment_id
+        description: "Identifier for the order's shipment."
+        tests:
+          - unique
+      - name: order_status
+        description: "Current status of the order (e.g., delivered, cancelled)."
+      - name: order_amount_usd
+        description: "The expected amount of the order in USD."
+      - name: order_updated_at
+        description: "Timestamp when the order record was last updated."
+      - name: valid_payment_usd
+        description: "The actual valid payment amount successfully captured in USD."
+      - name: duplicate_payment_usd
+        description: "The amount captured as a duplicate payment, representing a liability to be charged back."
+      - name: valid_payment_processed_at
+        description: "Timestamp when the valid payment was successfully processed."
+      - name: duplicate_processed_at
+        description: "Timestamp when the duplicate payment was processed."
+      - name: failed_payment_count
+        description: "Number of failed payment attempts prior to success."
+      - name: refund_amount_usd
+        description: "Total amount refunded for the order in USD."
+      - name: refund_reason
+        description: "The stated reason for the refund."
+      - name: refund_processed_at
+        description: "Timestamp when the refund was processed."
+      - name: shipping_cost
+        description: "The cost of shipping the order to the customer."
+      - name: shipping_status
+        description: "The current status of the physical shipment."
+      - name: delivery_time
+        description: "Timestamp when the order was delivered to the customer."
+      - name: cancellation_leakage
+        description: "Boolean flag indicating if an order was cancelled, money was collected, but no refund was issued."
+
+  - name: mart_lumen_loom_monthly__reconcilliation
+    description: "Monthly aggregate table bridging the gap between Finance (cash basis) and Operations (fulfillment basis) to explain revenue timing discrepancies."
+    columns:
+      - name: periods
+        description: "The reporting month truncated to the first day of the month."
+      - name: reporting_month
+        description: "String representation of the reporting month (e.g., MMMM YYYY)."
+      - name: finance_gross_revenue
+        description: "Gross revenue based on cash actually collected in this period (Finance's view)."
+      - name: aggregate_duplicate_payment
+        description: "Total duplicate payments captured in this period, held as a liability."
+      - name: aggregate_cancellation_leakage
+        description: "Total cash collected on cancelled orders without a corresponding refund in this period."
+      - name: finance_net_revenue
+        description: "Finance's net cash collected (Gross revenue minus cancellation leakage)."
+      - name: operation_gross_revenue
+        description: "Gross revenue recognized by Operations based on orders successfully delivered in this period."
+      - name: refunds
+        description: "Total cash refunded to customers during this period."
+      - name: operation_net_revenue
+        description: "Operations' net revenue (Delivered revenue minus refunds)."
+      - name: timing_diff
+        description: "The revenue timing gap. Represents valid cash collected that has not yet been recognized as delivered by Operations."
+      - name: refund_rate_pct
+        description: "The refund rate as a percentage of delivered revenue for the period."

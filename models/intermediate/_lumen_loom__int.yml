@@ -4,11 +4,29 @@ models:
   - name: int_lumen_loom__orders
     description: "Standardized order data with amounts converted to USD and timestamps corrected."
     columns:
+      - name: order_key
+        description: "Surrogate key for the order."
       - name: order_id
         description: "Primary key for the order."
         tests:
           - unique
           - not_null
+      - name: order_status
+        description: "Current status of the order."
+      - name: original_amount
+        description: "The original order amount before currency conversion."
+      - name: original_currency
+        description: "The original currency of the order."
+      - name: exchange_rate
+        description: "The applied USD exchange rate from the seed table."
+      - name: amount_usd
+        description: "The order amount converted to USD."
+      - name: currency
+        description: "Standardized currency label ('USD')."
+      - name: created_at
+        description: "Corrected timestamp for when the order was created."
+      - name: updated_at
+        description: "Corrected timestamp for when the order was last updated."
 
   - name: int_lumen_loom__payments
     description: "Standardized payments with USD conversion and duplication flags."
@@ -29,10 +47,40 @@ models:
           - relationships:
               to: ref('int_lumen_loom__orders')
               field: order_id
+      - name: payment_status
+        description: "Status of the payment attempt (e.g., succeeded, failed)."
+      - name: original_payment_amount
+        description: "Payment amount in the original currency."
+      - name: original_currency
+        description: "The original currency of the payment."
+      - name: payment_method
+        description: "Method used for payment."
+      - name: original_gateway_fee
+        description: "Gateway fee in the original currency."
+      - name: exchange_rate
+        description: "Applied USD exchange rate."
+      - name: payment_amount_usd
+        description: "Payment amount converted to USD."
+      - name: gateway_fee_usd
+        description: "Gateway fee converted to USD."
+      - name: currency
+        description: "Standardized currency label ('USD')."
+      - name: attempted_at
+        description: "Timestamp when the payment was attempted."
+      - name: processed_at
+        description: "Timestamp when the payment was processed."
+      - name: is_valid_revenue
+        description: "Boolean flag indicating if this is the first successful payment (true revenue)."
+      - name: is_duplicate_payment
+        description: "Boolean flag indicating if this is a subsequent successful payment (liability)."
+      - name: is_failed_attempt
+        description: "Boolean flag indicating if the payment attempt failed."
 
   - name: int_lumen_loom__refunds
     description: "Standardized refunds with USD conversion."
     columns:
+      - name: refund_key
+        description: "Surrogate key for the refund."
       - name: refund_id
         description: "Primary key for the refund."
         tests:
@@ -52,10 +100,30 @@ models:
           - relationships:
               to: ref('int_lumen_loom__orders')
               field: order_id
+      - name: original_refund_amount
+        description: "Refund amount in the original currency."
+      - name: original_currency
+        description: "The original currency of the refund."
+      - name: exchange_rate
+        description: "Applied USD exchange rate."
+      - name: refund_amount_usd
+        description: "Refund amount converted to USD."
+      - name: currency
+        description: "Standardized currency label ('USD')."
+      - name: refund_reason
+        description: "Stated reason for the refund."
+      - name: refund_status
+        description: "Current status of the refund."
+      - name: requested_at
+        description: "Timestamp when the refund was requested."
+      - name: processed_at
+        description: "Timestamp when the refund was processed."
 
   - name: int_lumen_loom__shipping
     description: "Standardized shipping data with derived API statuses."
     columns:
+      - name: shipment_key
+        description: "Surrogate key for the shipment."
       - name: shipment_id
         description: "Primary key for the shipment."
         tests:
@@ -67,3 +135,17 @@ models:
           - relationships:
               to: ref('int_lumen_loom__orders')
               field: order_id
+      - name: carrier
+        description: "The shipping carrier handling the delivery."
+      - name: shipping_cost
+        description: "The cost of shipping."
+      - name: original_api_status
+        description: "The raw shipping status provided by the API."
+      - name: derived_shipping_status
+        description: "Corrected shipping status based on timestamp presence."
+      - name: shipped_at
+        description: "Timestamp when the order was shipped."
+      - name: delivered_at
+        description: "Timestamp when the order was delivered."
+      - name: api_error_flag
+        description: "Boolean flag indicating an illogical API state (e.g., delivered without being shipped)."
