@@ -78,6 +78,10 @@ This project enforces strict data contracts using dbt native tests:
 * **Primary Key Integrity:** `unique` and `not_null` tests on all natural and surrogate keys.
 * **Referential Integrity:** `relationships` tests ensuring payments, refunds, and shipments map back to valid orders.
 * **Domain Validations:** `accepted_values` tests on critical states (e.g., `order_status`, `payment_method`, `refund_reason`).
+* **Business Logic Assertions (Singular Tests):** Custom SQL tests to catch logical violations, including:
+  * Ensuring `refund_amount_usd` never exceeds the original `payment_amount_usd`.
+  * Validating chronological integrity for order lifecycle (`updated_at` must be >= `created_at`).
+  * Validating chronological integrity for fulfillment (`delivered_at` must be >= `shipped_at`).
 
 ---
 
