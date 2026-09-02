@@ -84,11 +84,3 @@ This project enforces strict data contracts using dbt native tests:
   * Validating chronological integrity for fulfillment (`delivered_at` must be >= `shipped_at`).
 
 ---
-
-## 🛣️ Known Limitations & Roadmap (Future Enhancements)
-To evolve this pipeline further into enterprise-grade maturity, the following architectural upgrades are planned:
-
-1. **Slowly Changing Dimensions (SCDs) for Currency:** Transition from a static `seed` file to a daily exchange rate table to prevent historical revenue distortion.
-2. **Aggregated Joins:** Refactor the `mart_lumen_loom__revenue` model to aggregate the `int_refunds` table prior to the `LEFT JOIN` to strictly defend the 1-to-many grain and prevent potential fan-outs.
-3. **Deterministic Deduplication:** Update the `ROW_NUMBER()` logic in `int_lumen_loom__payments` to include `payment_id` in the `ORDER BY` clause, ensuring deterministic behavior for webhook duplicates firing at the exact same millisecond.
-4. **Exposing Source System Flaws:** Rather than masking inverted timestamps via `LEAST/GREATEST`, implement boolean anomaly flags to expose upstream engineering bugs to the data consumers.
